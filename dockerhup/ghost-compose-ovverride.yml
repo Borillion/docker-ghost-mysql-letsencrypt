@@ -1,0 +1,66 @@
+version: '3.5'
+
+services:
+
+  ghost:
+    container_name: ${GHOST_WEB_SEVICE_NAME:-ghost-blog}
+    image: ghost:${GHOST_VERSION:-latest}
+    volumes:
+      - ./data/ghost_data:/var/lib/ghost/content
+      # - ./data/ghost_data/apps:/var/lib/content/apps,data,images,themes
+    depends_on:
+      - ${GHOST_DB_SERVICE_NAME:-ghost-database-mysql}
+    environment:
+      # Site Configuration
+      - NODE_ENV=${GHOST_WEB_SERVICE_MODE:-production}
+      - url=${GHOST_WEB_SERVICE_HOST}
+      - VIRTUAL_HOST=${GHOST_WEB_SERVICE_DOMAINS:-localhost}
+      - VIRTUAL_PORT=${GHOST_WEB_SERVICE_PORT:-2386}
+      - LETSENCRYPT_HOST=${GHOST_WEB_SERVICE_DOMAINS}
+      - LETSENCRYPT_EMAIL=${GHOST_WEB_SERVICE_EMAIL}
+      # Database Configuration
+      - database__client=${GHOST_DATABASE_CLIENT}
+      - database__connection__host=${GHOST_DB_SERVICE_NAME}
+      - database__connection__user=${GHOST_DB_USER}
+      - database__connection__password=${GHOST_DB_PASSWORD}
+      - database__connection__database=${GHOST_DB_NAME}
+      # STMP Configuration
+      - mail__transport=${GHOST_MAIL_PROTOCOL}
+      - mail__from=${GHOST_MAIL_USER}
+      - mail__options__service=${GHOST_MAIL_SERVICE}
+      - mail__options__host=${GHOST_MAIL_HOST}
+      - mail__options__port=${GHOST_MAIL_PORT}
+      - mail__options__secure=${GHOST_MAIL_SECURITY}
+      - mail__options__auth__user=${GHOST_MAIL_USER}
+      - mail__options__auth__pass=${GHOST_MAIL_PASSWORD}
+    networks:
+      - proxy
+      - ghost-database-net
+    restart: unless-stopped
+
+  
+  ghost-database-mysql:
+    container_name: ${GHOST_DB_SERVICE_NAME:-ghost-database-mysql}
+    image: mysql:${GHOST_DB_VERSION:-8}
+    volumes:
+      - ./data/ghost_mysql_data:/var/lib/mysql
+    environment:
+      - MYSQL_RANDOM_ROOT_PASSWORD=${GHOST_DB_RANDOM_ROOT_PASS:-no}
+      - MYSQL_ONETIME_PASSWORD=${GHOST_DB_ONETIME_PASS:-no}
+      - MYSQL_USER=${GHOST_DB_USER}
+      - MYSQL_PASSWORD=${GHOST_DB_PASSWORD}
+      - MYSQL_DATABASE=${GHOST_DB_NAME}
+    networks:
+      - ghost-database-net
+    restart: unless-stopped
+
+networks:
+  proxy:
+    external: true
+  ghost-database-net:
+
+volumes:
+  mysql_data:
+    driver: local
+  ghost_data:
+    driver: local
