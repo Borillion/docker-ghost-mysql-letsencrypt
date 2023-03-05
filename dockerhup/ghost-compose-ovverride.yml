@@ -33,11 +33,10 @@ services:
       - mail__options__secure=${GHOST_MAIL_SECURITY}
       - mail__options__auth__user=${GHOST_MAIL_USER}
       - mail__options__auth__pass=${GHOST_MAIL_PASSWORD}
+    restart: unless-stopped
     networks:
       - proxy
       - ghost-database-net
-    restart: unless-stopped
-
   
   ghost-database-mysql:
     container_name: ${GHOST_DB_SERVICE_NAME:-ghost-database-mysql}
@@ -50,9 +49,9 @@ services:
       - MYSQL_USER=${GHOST_DB_USER}
       - MYSQL_PASSWORD=${GHOST_DB_PASSWORD}
       - MYSQL_DATABASE=${GHOST_DB_NAME}
+    restart: unless-stopped
     networks:
       - ghost-database-net
-    restart: unless-stopped
 
 networks:
   proxy:
